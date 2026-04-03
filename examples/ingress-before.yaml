@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-ingress
+  labels:
+    app: sample
+  annotations:
+    "alb.ingress.kubernetes.io/ssl-policy": TLS
+spec:
+  rules: []

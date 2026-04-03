@@ -1,0 +1,17 @@
+# Binaries
+bin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Go
+vendor/
+
+# Generated (re-create with `make generate`)
+# config/crd/bases/
+# api/v1/zz_generated.deepcopy.go

@@ -1,0 +1,25 @@
+image:
+  repository: patchwork
+  tag: ""  # defaults to appVersion
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+leaderElect: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}

@@ -1,0 +1,12 @@
+.git
+.idea
+.vscode
+.claude
+bin/
+hack/
+examples/
+*.iml
+*.md
+.gitignore
+.dockerignore
+Makefile

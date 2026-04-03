@@ -1,0 +1,6 @@
+apiVersion: v2
+name: patchwork
+description: A Kubernetes operator that automatically patches resources with default values based on PatchRule CRs.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
