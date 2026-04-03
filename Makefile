@@ -1,4 +1,4 @@
-IMG ?= patchwork:latest
+IMG ?= ghcr.io/andreasgerner/patchwork:latest
 CONTROLLER_GEN ?= $(shell which controller-gen 2>/dev/null)
 
 .PHONY: build

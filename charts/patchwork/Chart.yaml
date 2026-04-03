@@ -4,3 +4,6 @@ description: A Kubernetes operator that automatically patches resources with def
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+home: https://github.com/andreasgerner/patchwork
+sources:
+  - https://github.com/andreasgerner/patchwork

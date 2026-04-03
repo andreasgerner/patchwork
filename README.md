@@ -70,16 +70,14 @@ metadata:
 ```bash
 helm install patchwork charts/patchwork \
   --namespace patchwork-system \
-  --create-namespace \
-  --set image.repository=ghcr.io/your-org/patchwork \
-  --set image.tag=0.1.0
+  --create-namespace
 ```
 
 ### Helm values
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `image.repository` | `patchwork` | Container image repository |
+| `image.repository` | `ghcr.io/andreasgerner/patchwork` | Container image repository |
 | `image.tag` | `appVersion` | Image tag (defaults to chart appVersion) |
 | `image.pullPolicy` | `IfNotPresent` | Image pull policy |
 | `replicaCount` | `1` | Number of controller replicas |

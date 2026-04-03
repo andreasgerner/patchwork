@@ -1,5 +1,5 @@
 image:
-  repository: patchwork
+  repository: ghcr.io/andreasgerner/patchwork
   tag: ""  # defaults to appVersion
   pullPolicy: IfNotPresent
 
