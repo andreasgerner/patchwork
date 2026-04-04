@@ -8,10 +8,13 @@ rules:
   # PatchRule CRD
   - apiGroups: ["patchwork.io"]
     resources: ["patchrules"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "watch", "update", "patch"]
   - apiGroups: ["patchwork.io"]
     resources: ["patchrules/status"]
     verbs: ["get", "update", "patch"]
+  - apiGroups: ["patchwork.io"]
+    resources: ["patchrules/finalizers"]
+    verbs: ["update"]
   # Dynamic target resources (any kind)
   - apiGroups: ["*"]
     resources: ["*"]

@@ -1,50 +1,139 @@
 IMG ?= ghcr.io/andreasgerner/patchwork:latest
-CONTROLLER_GEN ?= $(shell which controller-gen 2>/dev/null)
+CONTAINER_TOOL ?= docker
 
-.PHONY: build
-build: ## Build the operator binary
-	go build -o bin/patchwork .
+# Tool versions
+CONTROLLER_TOOLS_VERSION ?= v0.20.1
+KUSTOMIZE_VERSION ?= v5.6.0
+ENVTEST_VERSION ?= release-0.20
+GOLANGCI_LINT_VERSION ?= v2.1.6
 
-.PHONY: test
-test: ## Run tests
-	go test ./... -v
+# Tool binaries
+LOCALBIN ?= $(shell pwd)/bin
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+
+.PHONY: help
+help: ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+##@ Development
+
+.PHONY: manifests
+manifests: controller-gen ## Generate CRD and RBAC manifests
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd paths="./..." output:crd:artifacts:config=config/crd/bases output:rbac:artifacts:config=config/rbac
+
+.PHONY: generate
+generate: controller-gen ## Generate DeepCopy methods
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+.PHONY: fmt
+fmt: ## Run go fmt
+	go fmt ./...
 
 .PHONY: vet
 vet: ## Run go vet
 	go vet ./...
 
-.PHONY: generate
-generate: controller-gen ## Generate deepcopy methods and CRD manifests
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
-	$(CONTROLLER_GEN) crd paths="./api/..." output:crd:artifacts:config=config/crd/bases
+.PHONY: lint
+lint: golangci-lint ## Run golangci-lint
+	$(GOLANGCI_LINT) run
 
-.PHONY: controller-gen
-controller-gen: ## Install controller-gen if not present
-	@test -n "$(CONTROLLER_GEN)" || { \
-		echo "Installing controller-gen..."; \
-		go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.20.1; \
-	}
+.PHONY: test
+test: manifests generate fmt vet envtest ## Run tests
+	KUBEBUILDER_ASSETS="$$($(ENVTEST) use $(ENVTEST_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
-.PHONY: docker-build
-docker-build: ## Build docker image
-	docker build -t $(IMG) .
+##@ Build
 
-.PHONY: docker-push
-docker-push: ## Push docker image
-	docker push $(IMG)
-
-.PHONY: install
-install: generate ## Install CRD into the cluster
-	kubectl apply -f config/crd/bases/
-
-.PHONY: uninstall
-uninstall: ## Remove CRD from the cluster
-	kubectl delete -f config/crd/bases/
+.PHONY: build
+build: manifests generate fmt vet ## Build manager binary
+	go build -o bin/manager cmd/main.go
 
 .PHONY: run
-run: build ## Run locally against the configured cluster
-	./bin/patchwork
+run: manifests generate fmt vet ## Run controller locally
+	go run ./cmd/main.go
 
-.PHONY: clean
-clean: ## Clean build artifacts
-	rm -rf bin/
+.PHONY: docker-build
+docker-build: ## Build Docker image
+	$(CONTAINER_TOOL) build -t $(IMG) .
+
+.PHONY: docker-push
+docker-push: ## Push Docker image
+	$(CONTAINER_TOOL) push $(IMG)
+
+.PHONY: docker-buildx
+docker-buildx: ## Build and push multi-arch Docker image
+	- $(CONTAINER_TOOL) buildx create --use
+	$(CONTAINER_TOOL) buildx build --push --platform linux/arm64,linux/amd64 --tag $(IMG) -f Dockerfile .
+
+##@ Deployment
+
+.PHONY: install
+install: manifests kustomize ## Install CRDs into the cluster
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
+.PHONY: uninstall
+uninstall: manifests kustomize ## Uninstall CRDs from the cluster
+	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found -f -
+
+.PHONY: deploy
+deploy: manifests kustomize ## Deploy controller via kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+
+.PHONY: undeploy
+undeploy: kustomize ## Undeploy controller via kustomize
+	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found -f -
+
+.PHONY: build-installer
+build-installer: manifests kustomize ## Generate consolidated install manifest
+	mkdir -p dist
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/default > dist/install.yaml
+
+##@ Helm
+
+.PHONY: helm-install
+helm-install: manifests ## Install via Helm
+	cp config/crd/bases/patchwork.io_patchrules.yaml charts/patchwork/crds/patchrules.patchwork.io.yaml
+	helm install patchwork charts/patchwork --namespace patchwork-system --create-namespace
+
+.PHONY: helm-uninstall
+helm-uninstall: ## Uninstall via Helm
+	helm uninstall patchwork -n patchwork-system
+
+##@ Dependencies
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN)
+$(CONTROLLER_GEN): $(LOCALBIN)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE)
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+.PHONY: envtest
+envtest: $(ENVTEST)
+$(ENVTEST): $(LOCALBIN)
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+# go-install-tool will install a Go tool in $(LOCALBIN) if it doesn't exist.
+define go-install-tool
+@[ -f $(1) ] || { \
+set -e; \
+package=$(2)@$(3); \
+echo "Installing $${package}"; \
+GOBIN=$(LOCALBIN) go install $${package}; \
+}
+endef

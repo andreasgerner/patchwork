@@ -1,0 +1,3 @@
+resources:
+- patchwork_v1_patchrule.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

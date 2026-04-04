@@ -20,15 +20,18 @@ spec:
     - jsonPath: .spec.target.kind
       name: Target
       type: string
+    - jsonPath: .spec.priority
+      name: Priority
+      type: integer
     - jsonPath: .spec.overwrite
       name: Overwrite
       type: boolean
     - jsonPath: .status.targetCount
       name: Targets
       type: integer
-    - jsonPath: .status.active
-      name: Active
-      type: boolean
+    - jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -67,6 +70,15 @@ spec:
                 description: Overwrite existing values. When false (default), only
                   sets missing keys.
                 type: boolean
+              priority:
+                default: 1
+                description: |-
+                  Priority determines which PatchRule wins when multiple rules target the same
+                  key paths on the same resource. Higher values take precedence. When equal,
+                  the rule with the earlier creation timestamp wins.
+                format: int32
+                minimum: 0
+                type: integer
               removals:
                 description: 'Removals: nested YAML where leaves are arrays of key
                   names to remove.'
@@ -96,14 +108,101 @@ spec:
           status:
             description: PatchRuleStatus reports the observed state.
             properties:
-              active:
-                type: boolean
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the PatchRule's state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               observedGeneration:
                 format: int64
                 type: integer
               targetCount:
                 format: int32
                 type: integer
+              targets:
+                additionalProperties:
+                  description: |-
+                    TargetState records what was applied to a single target resource and what the
+                    original values were before patching. Used for reverting on deletion or spec change.
+                  properties:
+                    appliedAdditions:
+                      description: 'AppliedAdditions: the additions that were actually
+                        written to the target.'
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    priorValues:
+                      description: |-
+                        PriorValues: original values on the target that were overwritten by additions.
+                        Keys that did not exist before patching are absent (revert = delete them).
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    removedEntries:
+                      description: |-
+                        RemovedEntries: original key-value pairs that were deleted from the target
+                        by the removals spec. Stored so they can be restored on revert.
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                  type: object
+                description: |-
+                  Targets maps "namespace/name" (or just "name" for cluster-scoped) to the
+                  state that was applied. Used for reverting patches on deletion or spec change.
+                type: object
             type: object
         required:
         - spec

@@ -7,4 +7,8 @@ metadata:
   annotations:
     "alb.ingress.kubernetes.io/ssl-policy": TLS
 spec:
-  rules: []
+  defaultBackend:
+    service:
+      port:
+        number: 80
+      name: test

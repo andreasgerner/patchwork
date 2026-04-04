@@ -1,5 +1,6 @@
 # Binaries
 bin/
+dist/
 
 # IDE
 .idea/
@@ -11,6 +12,10 @@ bin/
 
 # Go
 vendor/
+
+# Test
+cover.out
+*.test
 
 # Generated (re-create with `make generate`)
 # config/crd/bases/

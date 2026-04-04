@@ -3,10 +3,16 @@
 .vscode
 .claude
 bin/
+dist/
 hack/
 examples/
+charts/
+config/
+test/
 *.iml
 *.md
 .gitignore
 .dockerignore
+.golangci.yml
 Makefile
+PROJECT

@@ -1,19 +1,21 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.23 AS builder
+ARG TARGETOS
+ARG TARGETARCH
 
-RUN apk add --no-cache git
-
-WORKDIR /app
+WORKDIR /workspace
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /patchwork .
+COPY cmd/main.go cmd/main.go
+COPY api/ api/
+COPY internal/ internal/
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -a -o manager cmd/main.go
 
 FROM gcr.io/distroless/static:nonroot
-
-COPY --from=builder /patchwork /patchwork
-
+WORKDIR /
+COPY --from=builder /workspace/manager .
 USER 65532:65532
 
-ENTRYPOINT ["/patchwork"]
+ENTRYPOINT ["/manager"]

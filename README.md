@@ -128,3 +128,24 @@ Built with [controller-runtime](https://github.com/kubernetes-sigs/controller-ru
 2. Dynamically starts watches for each target resource type (Ingress, Deployment, etc.)
 3. When a target resource is created or updated, finds matching `PatchRule` CRs and applies a JSON merge patch
 4. Skips patching when the target already matches the desired state (no infinite loops)
+
+## Cleanup and revert
+
+The operator tracks every patch it applies per target in the PatchRule's status. A finalizer (`patchwork.io/cleanup`) ensures changes are reverted before the CR is deleted.
+
+- **Delete a PatchRule** -- all additions are reverted and all removed keys are restored on every tracked target.
+- **Remove an addition from spec** -- that specific addition is reverted on all targets (restored to its original value, or deleted if it was added by the operator).
+- **Remove a removal from spec** -- the previously removed keys are restored with their original values.
+- **Target no longer matches conditions** -- all patches on that target are fully reverted.
+
+Prior values are captured before each patch and preserved across reconciles, so reverts always restore the true original state (last-write-wins).
+
+## Conflict detection
+
+Multiple PatchRules can target the same resource kind, but they must not touch the same key paths on the same concrete targets. The operator checks this at reconcile time:
+
+- For each matched target, the rule's addition and removal paths are compared against other rules that already track the same target in their `status.targets`.
+- The rule with the **earlier creation timestamp** wins (tie-break: alphabetically lower name).
+- The losing rule is rejected: `status.conflicted=true`, `status.active=false`, and a `conflictMessage` naming the winning rule and overlapping paths.
+- Rules with **different conditions** that never match the same resources can freely use the same key paths — conflict detection operates on actual matched targets, not abstract condition comparison.
+- When the winning rule is deleted or modified to no longer claim the conflicting paths, the conflicted rule is automatically re-evaluated and becomes active.

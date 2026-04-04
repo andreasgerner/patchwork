@@ -1,11 +1,19 @@
 apiVersion: patchwork.io/v1
 kind: PatchRule
 metadata:
-  name: ingress-aws-lb
+  labels:
+    app.kubernetes.io/name: patchwork
+    app.kubernetes.io/managed-by: kustomize
+  name: patchrule-sample
 spec:
   target:
     apiVersion: networking.k8s.io/v1
     kind: Ingress
+    conditions:
+      metadata:
+        labels:
+          app: sample
+  priority: 1
   overwrite: true
   additions:
     metadata:
@@ -13,3 +21,7 @@ spec:
         alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-Res-PQ-2025-09
       labels:
         managed-by: aws-lb-controller
+  removals:
+    metadata:
+      annotations:
+        - deprecated-annotation

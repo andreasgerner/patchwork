@@ -1,0 +1,28 @@
+# permissions for end users to edit patchrules.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: patchwork
+    app.kubernetes.io/managed-by: kustomize
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: patchrule-editor-role
+rules:
+- apiGroups:
+  - patchwork.patchwork.io
+  resources:
+  - patchrules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - patchwork.patchwork.io
+  resources:
+  - patchrules/status
+  verbs:
+  - get

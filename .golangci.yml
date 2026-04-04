@@ -1,0 +1,10 @@
+run:
+  timeout: 5m
+  allow-parallel-runners: true
+
+issues:
+  max-same-issues: 0
+  exclude-rules:
+    - linters:
+        - dupl
+      path: _test\.go

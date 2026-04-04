@@ -1,0 +1,6 @@
+resources:
+- bases/patchwork.io_patchrules.yaml
+#+kubebuilder:scaffold:crdkustomizeresource
+
+configurations:
+- kustomizeconfig.yaml
