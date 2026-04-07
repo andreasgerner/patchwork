@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: manager
+        kubectl.kubernetes.io/default-container: patchwork
       labels:
         control-plane: controller-manager
     spec:
@@ -34,12 +34,13 @@ spec:
           type: RuntimeDefault
       containers:
       - command:
-        - /manager
+        - /patchwork
         args:
         - --leader-elect
         - --health-probe-bind-address=:8081
+        - --metrics-bind-address=0
         image: controller:latest
-        name: manager
+        name: patchwork
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

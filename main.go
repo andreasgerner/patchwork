@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -16,7 +17,7 @@ import (
 
 	patchworkv1 "github.com/andreasgerner/patchwork/api/v1"
 	"github.com/andreasgerner/patchwork/internal/controller"
-	// +kubebuilder:scaffold:imports
+	"github.com/andreasgerner/patchwork/pkg/version"
 )
 
 var (
@@ -27,23 +28,34 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(patchworkv1.AddToScheme(scheme))
-	// +kubebuilder:scaffold:scheme
 }
 
 func main() {
 	var metricsAddr string
 	var probeAddr string
 	var leaderElect bool
+	var development bool
+	var showVersion bool
 
-	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. Use 0 to disable.")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metrics endpoint binds to. Use 0 to disable.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&leaderElect, "leader-elect", false, "Enable leader election for high availability.")
+	flag.BoolVar(&development, "development", false, "Enable development mode (human-readable logs, DPanic panics).")
+	flag.BoolVar(&showVersion, "version", false, "Print version and exit.")
 
-	opts := zap.Options{Development: true}
+	var opts zap.Options
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	if showVersion {
+		fmt.Println(version.Banner())
+		os.Exit(0)
+	}
+
+	opts.Development = development
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	setupLog.Info(version.Banner())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
@@ -67,7 +79,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "PatchRule")
 		os.Exit(1)
 	}
-	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

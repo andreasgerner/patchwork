@@ -1,0 +1,10 @@
+defaultBaseImage: gcr.io/distroless/static:nonroot
+builds:
+  - id: patchwork
+    main: .
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/andreasgerner/patchwork/pkg/version.Version={{.Env.VERSION}}
+      - -X github.com/andreasgerner/patchwork/pkg/version.GitCommit={{.Env.GIT_COMMIT}}

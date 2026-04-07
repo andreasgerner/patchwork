@@ -1,6 +1,7 @@
-# Binaries
+# Build output
 bin/
 dist/
+.ko/
 
 # IDE
 .idea/
@@ -12,11 +13,10 @@ dist/
 
 # Go
 vendor/
-
-# Test
 cover.out
+*.coverprofile
+profile.cov
 *.test
 
-# Generated (re-create with `make generate`)
-# config/crd/bases/
-# api/v1/zz_generated.deepcopy.go
+# Tools
+go.tool.sum

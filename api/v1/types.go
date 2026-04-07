@@ -19,7 +19,7 @@ type NestedObject struct {
 
 func (n NestedObject) MarshalJSON() ([]byte, error) {
 	if n.Data == nil {
-		return []byte("{}"), nil
+		return []byte("null"), nil
 	}
 	return json.Marshal(n.Data)
 }

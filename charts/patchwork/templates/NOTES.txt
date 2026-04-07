@@ -1,0 +1,18 @@
+Patchwork has been installed.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+To verify the installation:
+
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "patchwork.name" . }}
+
+To list PatchRules:
+
+  kubectl get patchrules -A
+
+To create your first PatchRule, see: https://github.com/andreasgerner/patchwork/tree/main/examples
+
+NOTE: The PatchRule CRD is managed outside of Helm's lifecycle.
+      Running 'helm uninstall' will NOT remove the CRD or existing PatchRule resources.
+      To remove the CRD manually: kubectl delete crd patchrules.patchwork.io

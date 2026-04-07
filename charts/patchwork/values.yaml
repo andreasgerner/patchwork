@@ -1,9 +1,15 @@
+nameOverride: ""
+fullnameOverride: ""
+
 image:
   repository: ghcr.io/andreasgerner/patchwork
   tag: ""  # defaults to appVersion
   pullPolicy: IfNotPresent
 
+imagePullSecrets: []
+
 replicaCount: 1
+revisionHistoryLimit: 3
 
 leaderElect: true
 
@@ -15,11 +21,28 @@ resources:
     cpu: 200m
     memory: 128Mi
 
+terminationGracePeriodSeconds: 10
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
+topologySpreadConstraints: []
 
 serviceAccount:
   create: true
   name: ""
   annotations: {}
+
+metrics:
+  enabled: false
+  port: 8080
+  serviceMonitor:
+    enabled: false
+    interval: "30s"
+    scrapeTimeout: ""
+    labels: {}
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+  # minAvailable: 1  # use either maxUnavailable or minAvailable, not both

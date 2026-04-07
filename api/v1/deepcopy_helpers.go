@@ -9,6 +9,10 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 func (in *PatchRuleSpec) DeepCopyInto(out *PatchRuleSpec) {
 	*out = *in
 	in.Target.DeepCopyInto(&out.Target)
+	if in.Priority != nil {
+		p := *in.Priority
+		out.Priority = &p
+	}
 	out.Additions = in.Additions.DeepCopy()
 	out.Removals = in.Removals.DeepCopy()
 }

@@ -1,4 +1,4 @@
-package controller
+package patcher
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -10,10 +10,10 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// matches
+// Matches
 // ---------------------------------------------------------------------------
 
-var _ = Describe("matches", func() {
+var _ = Describe("Matches", func() {
 	It("matches when conditions are met", func() {
 		got := map[string]interface{}{
 			"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test", "env": "prod"}},
@@ -21,40 +21,40 @@ var _ = Describe("matches", func() {
 		want := map[string]interface{}{
 			"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test"}},
 		}
-		Expect(matches(got, want)).To(BeTrue())
+		Expect(Matches(got, want)).To(BeTrue())
 	})
 	It("does not match when value differs", func() {
-		Expect(matches(
+		Expect(Matches(
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "other"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test"}}},
 		)).To(BeFalse())
 	})
 	It("does not match when key is missing from got", func() {
-		Expect(matches(
+		Expect(Matches(
 			map[string]interface{}{"metadata": map[string]interface{}{}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test"}}},
 		)).To(BeFalse())
 	})
 	It("always matches when want is nil", func() {
-		Expect(matches(map[string]interface{}{"a": "b"}, nil)).To(BeTrue())
+		Expect(Matches(map[string]interface{}{"a": "b"}, nil)).To(BeTrue())
 	})
 	It("always matches when want is empty", func() {
-		Expect(matches(map[string]interface{}{"a": "b"}, map[string]interface{}{})).To(BeTrue())
+		Expect(Matches(map[string]interface{}{"a": "b"}, map[string]interface{}{})).To(BeTrue())
 	})
 	It("returns false for non-string non-map want value", func() {
-		Expect(matches(map[string]interface{}{"count": "3"}, map[string]interface{}{"count": 3})).To(BeFalse())
+		Expect(Matches(map[string]interface{}{"count": "3"}, map[string]interface{}{"count": 3})).To(BeFalse())
 	})
 	It("returns false when got has string but want expects map", func() {
-		Expect(matches(
+		Expect(Matches(
 			map[string]interface{}{"metadata": "flat"},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{}}},
 		)).To(BeFalse())
 	})
 	It("returns false when got is nil and want is non-empty", func() {
-		Expect(matches(nil, map[string]interface{}{"key": "val"})).To(BeFalse())
+		Expect(Matches(nil, map[string]interface{}{"key": "val"})).To(BeFalse())
 	})
 	It("returns true when both are nil", func() {
-		Expect(matches(nil, nil)).To(BeTrue())
+		Expect(Matches(nil, nil)).To(BeTrue())
 	})
 })
 
@@ -153,7 +153,7 @@ var _ = Describe("applyDeletes", func() {
 })
 
 // ---------------------------------------------------------------------------
-// ensureChild
+// EnsureChild
 // ---------------------------------------------------------------------------
 
 var _ = Describe("ensureChild", func() {
@@ -175,25 +175,25 @@ var _ = Describe("ensureChild", func() {
 })
 
 // ---------------------------------------------------------------------------
-// captureOverwrittenValues
+// CaptureOverwrittenValues
 // ---------------------------------------------------------------------------
 
-var _ = Describe("captureOverwrittenValues", func() {
+var _ = Describe("CaptureOverwrittenValues", func() {
 	It("captures value that will be overwritten", func() {
-		Expect(captureOverwrittenValues(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new"}, true)).
+		Expect(CaptureOverwrittenValues(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new"}, true)).
 			To(HaveKeyWithValue("key", "old"))
 	})
 	It("returns nil when overwrite=false", func() {
-		Expect(captureOverwrittenValues(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new"}, false)).To(BeNil())
+		Expect(CaptureOverwrittenValues(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new"}, false)).To(BeNil())
 	})
 	It("skips missing key", func() {
-		Expect(captureOverwrittenValues(map[string]interface{}{}, map[string]interface{}{"key": "new"}, true)).To(BeNil())
+		Expect(CaptureOverwrittenValues(map[string]interface{}{}, map[string]interface{}{"key": "new"}, true)).To(BeNil())
 	})
 	It("skips same value", func() {
-		Expect(captureOverwrittenValues(map[string]interface{}{"key": "same"}, map[string]interface{}{"key": "same"}, true)).To(BeNil())
+		Expect(CaptureOverwrittenValues(map[string]interface{}{"key": "same"}, map[string]interface{}{"key": "same"}, true)).To(BeNil())
 	})
 	It("recurses into nested maps", func() {
-		result := captureOverwrittenValues(
+		result := CaptureOverwrittenValues(
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "old"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "new"}}},
 			true,
@@ -202,69 +202,69 @@ var _ = Describe("captureOverwrittenValues", func() {
 		Expect(labels).To(HaveKeyWithValue("app", "old"))
 	})
 	It("returns nil for nil inputs", func() {
-		Expect(captureOverwrittenValues(nil, nil, true)).To(BeNil())
+		Expect(CaptureOverwrittenValues(nil, nil, true)).To(BeNil())
 	})
 })
 
 // ---------------------------------------------------------------------------
-// captureRemovedEntries
+// CaptureRemovedEntries
 // ---------------------------------------------------------------------------
 
-var _ = Describe("captureRemovedEntries", func() {
+var _ = Describe("CaptureRemovedEntries", func() {
 	It("captures values of keys to be removed", func() {
-		result := captureRemovedEntries(
+		result := CaptureRemovedEntries(
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": map[string]interface{}{"foo": "bar", "baz": "qux"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": []interface{}{"foo"}}},
 		)
 		Expect(result["metadata"].(map[string]interface{})).To(HaveKeyWithValue("foo", "bar"))
 	})
 	It("skips when target child is nil", func() {
-		Expect(captureRemovedEntries(map[string]interface{}{}, map[string]interface{}{
+		Expect(CaptureRemovedEntries(map[string]interface{}{}, map[string]interface{}{
 			"metadata": map[string]interface{}{"annotations": []interface{}{"foo"}},
 		})).To(BeNil())
 	})
 	It("skips when removal key does not exist in target", func() {
-		Expect(captureRemovedEntries(
+		Expect(CaptureRemovedEntries(
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": map[string]interface{}{"other": "val"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": []interface{}{"missing"}}},
 		)).To(BeNil())
 	})
 	It("returns nil for nil inputs", func() {
-		Expect(captureRemovedEntries(nil, nil)).To(BeNil())
+		Expect(CaptureRemovedEntries(nil, nil)).To(BeNil())
 	})
 })
 
 // ---------------------------------------------------------------------------
-// captureAppliedAdditions
+// CaptureAppliedAdditions
 // ---------------------------------------------------------------------------
 
-var _ = Describe("captureAppliedAdditions", func() {
+var _ = Describe("CaptureAppliedAdditions", func() {
 	It("includes all when overwrite=true", func() {
-		result := captureAppliedAdditions(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new", "extra": "val"}, true)
+		result := CaptureAppliedAdditions(map[string]interface{}{"key": "old"}, map[string]interface{}{"key": "new", "extra": "val"}, true)
 		Expect(result).To(HaveKeyWithValue("key", "new"))
 		Expect(result).To(HaveKeyWithValue("extra", "val"))
 	})
 	It("skips non-overwritten existing key when overwrite=false", func() {
-		Expect(captureAppliedAdditions(map[string]interface{}{"key": "different"}, map[string]interface{}{"key": "new"}, false)).To(BeNil())
+		Expect(CaptureAppliedAdditions(map[string]interface{}{"key": "different"}, map[string]interface{}{"key": "new"}, false)).To(BeNil())
 	})
 	It("includes when overwrite=false and value matches", func() {
-		Expect(captureAppliedAdditions(map[string]interface{}{"key": "new"}, map[string]interface{}{"key": "new"}, false)).
+		Expect(CaptureAppliedAdditions(map[string]interface{}{"key": "new"}, map[string]interface{}{"key": "new"}, false)).
 			To(HaveKeyWithValue("key", "new"))
 	})
 	It("includes when overwrite=false and key absent", func() {
-		Expect(captureAppliedAdditions(map[string]interface{}{}, map[string]interface{}{"key": "new"}, false)).
+		Expect(CaptureAppliedAdditions(map[string]interface{}{}, map[string]interface{}{"key": "new"}, false)).
 			To(HaveKeyWithValue("key", "new"))
 	})
 	It("returns nil for nil inputs", func() {
-		Expect(captureAppliedAdditions(nil, nil, true)).To(BeNil())
+		Expect(CaptureAppliedAdditions(nil, nil, true)).To(BeNil())
 	})
 })
 
 // ---------------------------------------------------------------------------
-// buildPatch
+// BuildPatch
 // ---------------------------------------------------------------------------
 
-var _ = Describe("buildPatch", func() {
+var _ = Describe("BuildPatch", func() {
 	It("returns nil when nothing needs changing", func() {
 		target := &unstructured.Unstructured{Object: map[string]interface{}{
 			"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test"}},
@@ -275,14 +275,14 @@ var _ = Describe("buildPatch", func() {
 				"metadata": map[string]interface{}{"labels": map[string]interface{}{"app": "test"}},
 			}},
 		}}
-		Expect(buildPatch(target, rule)).To(BeNil())
+		Expect(BuildPatch(target, rule)).To(BeNil())
 	})
 	It("produces patch for additions", func() {
 		target := &unstructured.Unstructured{Object: map[string]interface{}{}}
 		rule := &patchworkv1.PatchRule{Spec: patchworkv1.PatchRuleSpec{
 			Additions: patchworkv1.NestedObject{Data: map[string]interface{}{"key": "val"}},
 		}}
-		Expect(buildPatch(target, rule)).To(HaveKeyWithValue("key", "val"))
+		Expect(BuildPatch(target, rule)).To(HaveKeyWithValue("key", "val"))
 	})
 	It("produces patch for removals", func() {
 		target := &unstructured.Unstructured{Object: map[string]interface{}{
@@ -293,7 +293,7 @@ var _ = Describe("buildPatch", func() {
 				"metadata": map[string]interface{}{"annotations": []interface{}{"old"}},
 			}},
 		}}
-		Expect(buildPatch(target, rule)).NotTo(BeNil())
+		Expect(BuildPatch(target, rule)).NotTo(BeNil())
 	})
 	It("handles both additions and removals", func() {
 		target := &unstructured.Unstructured{Object: map[string]interface{}{
@@ -308,32 +308,32 @@ var _ = Describe("buildPatch", func() {
 				"metadata": map[string]interface{}{"annotations": []interface{}{"old"}},
 			}},
 		}}
-		Expect(buildPatch(target, rule)).To(HaveKey("metadata"))
+		Expect(BuildPatch(target, rule)).To(HaveKey("metadata"))
 	})
 	It("returns nil for empty spec", func() {
-		Expect(buildPatch(&unstructured.Unstructured{Object: map[string]interface{}{}}, &patchworkv1.PatchRule{})).To(BeNil())
+		Expect(BuildPatch(&unstructured.Unstructured{Object: map[string]interface{}{}}, &patchworkv1.PatchRule{})).To(BeNil())
 	})
 })
 
 // ---------------------------------------------------------------------------
-// buildRevertPatch
+// BuildRevertPatch
 // ---------------------------------------------------------------------------
 
-var _ = Describe("buildRevertPatch", func() {
+var _ = Describe("BuildRevertPatch", func() {
 	It("restores prior values and deletes added keys", func() {
-		patch := buildRevertPatch(map[string]interface{}{"added": "new", "changed": "new"}, map[string]interface{}{"changed": "original"}, nil)
+		patch := BuildRevertPatch(map[string]interface{}{"added": "new", "changed": "new"}, map[string]interface{}{"changed": "original"}, nil)
 		Expect(patch["changed"]).To(Equal("original"))
 		Expect(patch).To(HaveKey("added"))
 		Expect(patch["added"]).To(BeNil())
 	})
 	It("restores removed entries", func() {
-		Expect(buildRevertPatch(nil, nil, map[string]interface{}{"key": "old"})).To(HaveKeyWithValue("key", "old"))
+		Expect(BuildRevertPatch(nil, nil, map[string]interface{}{"key": "old"})).To(HaveKeyWithValue("key", "old"))
 	})
 	It("returns nil when nothing to revert", func() {
-		Expect(buildRevertPatch(nil, nil, nil)).To(BeNil())
+		Expect(BuildRevertPatch(nil, nil, nil)).To(BeNil())
 	})
 	It("handles nested additions with mixed prior/no-prior", func() {
-		patch := buildRevertPatch(
+		patch := BuildRevertPatch(
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"added": "new", "changed": "new"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"changed": "original"}}},
 			nil,
@@ -343,7 +343,7 @@ var _ = Describe("buildRevertPatch", func() {
 		Expect(labels["added"]).To(BeNil())
 	})
 	It("handles nested removed entries", func() {
-		patch := buildRevertPatch(nil, nil, map[string]interface{}{
+		patch := BuildRevertPatch(nil, nil, map[string]interface{}{
 			"metadata": map[string]interface{}{"annotations": map[string]interface{}{"foo": "bar"}},
 		})
 		ann := patch["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})
@@ -352,12 +352,12 @@ var _ = Describe("buildRevertPatch", func() {
 })
 
 // ---------------------------------------------------------------------------
-// buildDiffRevertPatch
+// BuildDiffRevertPatch
 // ---------------------------------------------------------------------------
 
-var _ = Describe("buildDiffRevertPatch", func() {
+var _ = Describe("BuildDiffRevertPatch", func() {
 	It("reverts dropped additions with prior", func() {
-		patch := buildDiffRevertPatch(
+		patch := BuildDiffRevertPatch(
 			map[string]interface{}{"kept": "val", "dropped": "val"},
 			map[string]interface{}{"kept": "val"},
 			map[string]interface{}{"dropped": "original"}, nil, nil,
@@ -366,20 +366,20 @@ var _ = Describe("buildDiffRevertPatch", func() {
 		Expect(patch).NotTo(HaveKey("kept"))
 	})
 	It("deletes added key with no prior when dropped", func() {
-		patch := buildDiffRevertPatch(map[string]interface{}{"added": "val"}, nil, nil, nil, nil)
+		patch := BuildDiffRevertPatch(map[string]interface{}{"added": "val"}, nil, nil, nil, nil)
 		Expect(patch).To(HaveKey("added"))
 		Expect(patch["added"]).To(BeNil())
 	})
 	It("restores dropped removal entries", func() {
-		Expect(buildDiffRevertPatch(nil, nil, nil, map[string]interface{}{"key": "restored"}, nil)).
+		Expect(BuildDiffRevertPatch(nil, nil, nil, map[string]interface{}{"key": "restored"}, nil)).
 			To(HaveKeyWithValue("key", "restored"))
 	})
 	It("returns nil when nothing changed", func() {
 		same := map[string]interface{}{"key": "val"}
-		Expect(buildDiffRevertPatch(same, same, nil, nil, nil)).To(BeNil())
+		Expect(BuildDiffRevertPatch(same, same, nil, nil, nil)).To(BeNil())
 	})
 	It("handles nested sub-key removal", func() {
-		patch := buildDiffRevertPatch(
+		patch := BuildDiffRevertPatch(
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"a": "1", "b": "2"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"a": "1"}}},
 			nil, nil, nil,
@@ -391,12 +391,12 @@ var _ = Describe("buildDiffRevertPatch", func() {
 })
 
 // ---------------------------------------------------------------------------
-// collectAdditionPaths / collectRemovalPaths / collectTrackedPaths
+// CollectAdditionPaths / CollectRemovalPaths / CollectTrackedPaths
 // ---------------------------------------------------------------------------
 
-var _ = Describe("collectAdditionPaths", func() {
+var _ = Describe("CollectAdditionPaths", func() {
 	It("collects nested leaf paths", func() {
-		Expect(collectAdditionPaths(map[string]interface{}{
+		Expect(CollectAdditionPaths(map[string]interface{}{
 			"metadata": map[string]interface{}{
 				"annotations": map[string]interface{}{"foo": "bar"},
 				"labels":      map[string]interface{}{"app": "test"},
@@ -404,80 +404,80 @@ var _ = Describe("collectAdditionPaths", func() {
 		}, "")).To(ConsistOf("metadata.annotations.foo", "metadata.labels.app"))
 	})
 	It("handles flat key", func() {
-		Expect(collectAdditionPaths(map[string]interface{}{"key": "val"}, "")).To(ConsistOf("key"))
+		Expect(CollectAdditionPaths(map[string]interface{}{"key": "val"}, "")).To(ConsistOf("key"))
 	})
 	It("respects prefix", func() {
-		Expect(collectAdditionPaths(map[string]interface{}{"key": "val"}, "root")).To(ConsistOf("root.key"))
+		Expect(CollectAdditionPaths(map[string]interface{}{"key": "val"}, "root")).To(ConsistOf("root.key"))
 	})
 	It("returns empty for nil", func() {
-		Expect(collectAdditionPaths(nil, "")).To(BeEmpty())
+		Expect(CollectAdditionPaths(nil, "")).To(BeEmpty())
 	})
 	It("treats non-string non-map as leaf", func() {
-		Expect(collectAdditionPaths(map[string]interface{}{"count": 42}, "")).To(ConsistOf("count"))
+		Expect(CollectAdditionPaths(map[string]interface{}{"count": 42}, "")).To(ConsistOf("count"))
 	})
 })
 
-var _ = Describe("collectRemovalPaths", func() {
+var _ = Describe("CollectRemovalPaths", func() {
 	It("collects paths from string arrays", func() {
-		Expect(collectRemovalPaths(map[string]interface{}{
+		Expect(CollectRemovalPaths(map[string]interface{}{
 			"metadata": map[string]interface{}{"annotations": []interface{}{"deprecated", "old"}},
 		}, "")).To(ConsistOf("metadata.annotations.deprecated", "metadata.annotations.old"))
 	})
 	It("returns empty for nil", func() {
-		Expect(collectRemovalPaths(nil, "")).To(BeEmpty())
+		Expect(CollectRemovalPaths(nil, "")).To(BeEmpty())
 	})
 	It("skips non-string items", func() {
-		Expect(collectRemovalPaths(map[string]interface{}{
+		Expect(CollectRemovalPaths(map[string]interface{}{
 			"metadata": map[string]interface{}{"annotations": []interface{}{123, "valid"}},
 		}, "")).To(ConsistOf("metadata.annotations.valid"))
 	})
 	It("returns empty for empty array", func() {
-		Expect(collectRemovalPaths(map[string]interface{}{
+		Expect(CollectRemovalPaths(map[string]interface{}{
 			"metadata": map[string]interface{}{"annotations": []interface{}{}},
 		}, "")).To(BeEmpty())
 	})
 	It("respects prefix", func() {
-		Expect(collectRemovalPaths(map[string]interface{}{"keys": []interface{}{"a"}}, "root")).To(ConsistOf("root.keys.a"))
+		Expect(CollectRemovalPaths(map[string]interface{}{"keys": []interface{}{"a"}}, "root")).To(ConsistOf("root.keys.a"))
 	})
 })
 
-var _ = Describe("collectTrackedPaths", func() {
+var _ = Describe("CollectTrackedPaths", func() {
 	It("collects from both additions and removed entries", func() {
-		Expect(collectTrackedPaths(patchworkv1.TargetState{
+		Expect(CollectTrackedPaths(patchworkv1.TargetState{
 			AppliedAdditions: patchworkv1.NestedObject{Data: map[string]interface{}{"a": "1"}},
 			RemovedEntries:   patchworkv1.NestedObject{Data: map[string]interface{}{"b": "2"}},
 		})).To(ConsistOf("a", "b"))
 	})
 	It("returns empty for empty state", func() {
-		Expect(collectTrackedPaths(patchworkv1.TargetState{})).To(BeEmpty())
+		Expect(CollectTrackedPaths(patchworkv1.TargetState{})).To(BeEmpty())
 	})
 })
 
 // ---------------------------------------------------------------------------
-// mergePriorValues
+// MergePriorValues
 // ---------------------------------------------------------------------------
 
-var _ = Describe("mergePriorValues", func() {
+var _ = Describe("MergePriorValues", func() {
 	It("old wins over captured", func() {
-		Expect(mergePriorValues(map[string]interface{}{"key": "original"}, map[string]interface{}{"key": "patched"})).
+		Expect(MergePriorValues(map[string]interface{}{"key": "original"}, map[string]interface{}{"key": "patched"})).
 			To(HaveKeyWithValue("key", "original"))
 	})
 	It("merges disjoint keys", func() {
-		result := mergePriorValues(map[string]interface{}{"a": "1"}, map[string]interface{}{"b": "2"})
+		result := MergePriorValues(map[string]interface{}{"a": "1"}, map[string]interface{}{"b": "2"})
 		Expect(result).To(HaveKeyWithValue("a", "1"))
 		Expect(result).To(HaveKeyWithValue("b", "2"))
 	})
 	It("returns captured when old is nil", func() {
-		Expect(mergePriorValues(nil, map[string]interface{}{"a": "1"})).To(HaveKeyWithValue("a", "1"))
+		Expect(MergePriorValues(nil, map[string]interface{}{"a": "1"})).To(HaveKeyWithValue("a", "1"))
 	})
 	It("returns old when captured is nil", func() {
-		Expect(mergePriorValues(map[string]interface{}{"a": "1"}, nil)).To(HaveKeyWithValue("a", "1"))
+		Expect(MergePriorValues(map[string]interface{}{"a": "1"}, nil)).To(HaveKeyWithValue("a", "1"))
 	})
 	It("returns nil when both nil", func() {
-		Expect(mergePriorValues(nil, nil)).To(BeNil())
+		Expect(MergePriorValues(nil, nil)).To(BeNil())
 	})
 	It("recursively merges nested maps", func() {
-		result := mergePriorValues(
+		result := MergePriorValues(
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"a": "original"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"labels": map[string]interface{}{"a": "patched", "b": "new"}}},
 		)
@@ -486,7 +486,7 @@ var _ = Describe("mergePriorValues", func() {
 		Expect(labels).To(HaveKeyWithValue("b", "new"))
 	})
 	It("old non-map overwrites captured map", func() {
-		result := mergePriorValues(
+		result := MergePriorValues(
 			map[string]interface{}{"key": "flat"},
 			map[string]interface{}{"key": map[string]interface{}{"nested": "val"}},
 		)
