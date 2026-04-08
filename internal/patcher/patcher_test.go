@@ -216,7 +216,8 @@ var _ = Describe("CaptureRemovedEntries", func() {
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": map[string]interface{}{"foo": "bar", "baz": "qux"}}},
 			map[string]interface{}{"metadata": map[string]interface{}{"annotations": []interface{}{"foo"}}},
 		)
-		Expect(result["metadata"].(map[string]interface{})).To(HaveKeyWithValue("foo", "bar"))
+		annotations := result["metadata"].(map[string]interface{})["annotations"].(map[string]interface{})
+		Expect(annotations).To(HaveKeyWithValue("foo", "bar"))
 	})
 	It("skips when target child is nil", func() {
 		Expect(CaptureRemovedEntries(map[string]interface{}{}, map[string]interface{}{

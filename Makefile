@@ -13,6 +13,7 @@ KO ?= ko
 CONTROLLER_TOOLS_VERSION ?= v0.17.3
 KUSTOMIZE_VERSION ?= v5.6.0
 ENVTEST_VERSION ?= release-0.20
+ENVTEST_K8S_VERSION ?= 1.32.x
 GOLANGCI_LINT_VERSION ?= v2.1.6
 
 # Tool binaries
@@ -56,7 +57,7 @@ lint: golangci-lint #? Run golangci-lint
 
 .PHONY: test
 test: manifests generate fmt vet envtest #? Run tests
-	KUBEBUILDER_ASSETS="$$($(ENVTEST) use $(ENVTEST_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$$($(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 .PHONY: version
 version: #? Print version
