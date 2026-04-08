@@ -32,6 +32,10 @@ linters:
           - dupl
           - gosec
         path: _test\.go
+      - linters:
+          - revive
+        path: _test\.go
+        text: "dot-imports"
 
 formatters:
   enable:

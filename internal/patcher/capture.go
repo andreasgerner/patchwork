@@ -1,3 +1,5 @@
+// Package patcher provides pure functions for building, capturing, and reverting
+// JSON merge patches on Kubernetes resources.
 package patcher
 
 // CaptureOverwrittenValues walks the additions tree and records the current

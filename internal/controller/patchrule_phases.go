@@ -27,6 +27,8 @@ type matchedTarget struct {
 
 // reconcileDelete reverts all tracked patches and returns. Called when the
 // PatchRule has a non-zero DeletionTimestamp.
+//
+//nolint:unparam // ctrl.Result is kept for controller-runtime convention; may be used for requeueing in the future.
 func (r *PatchRuleReconciler) reconcileDelete(ctx context.Context, rule *patchworkv1.PatchRule) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -49,6 +51,8 @@ func (r *PatchRuleReconciler) reconcileDelete(ctx context.Context, rule *patchwo
 
 // reconcileNormal is the main reconcile path for active (non-deleting) PatchRules.
 // It checks conflicts, patches matching targets, reverts stale state, and updates status.
+//
+//nolint:unparam // ctrl.Result is kept for controller-runtime convention.
 func (r *PatchRuleReconciler) reconcileNormal(ctx context.Context, rule *patchworkv1.PatchRule) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -142,7 +146,7 @@ func (r *PatchRuleReconciler) reconcileNormal(ctx context.Context, rule *patchwo
 
 	// Update status fields
 	rule.Status.ObservedGeneration = rule.Generation
-	rule.Status.TargetCount = int32(len(matched))
+	rule.Status.TargetCount = int32(len(matched)) //nolint:gosec // len(matched) is bounded by cluster resources, never overflows int32
 	rule.Status.Targets = newTargets
 	setReadyCondition(rule)
 

@@ -6,6 +6,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // but not for sub-types that contain map[string]interface{}. These must be
 // written manually.
 
+// DeepCopyInto copies all fields into the given PatchRuleSpec.
 func (in *PatchRuleSpec) DeepCopyInto(out *PatchRuleSpec) {
 	*out = *in
 	in.Target.DeepCopyInto(&out.Target)
@@ -17,6 +18,7 @@ func (in *PatchRuleSpec) DeepCopyInto(out *PatchRuleSpec) {
 	out.Removals = in.Removals.DeepCopy()
 }
 
+// DeepCopy returns a deep copy of the PatchRuleSpec.
 func (in *PatchRuleSpec) DeepCopy() *PatchRuleSpec {
 	if in == nil {
 		return nil
@@ -26,11 +28,13 @@ func (in *PatchRuleSpec) DeepCopy() *PatchRuleSpec {
 	return out
 }
 
+// DeepCopyInto copies all fields into the given TargetRef.
 func (in *TargetRef) DeepCopyInto(out *TargetRef) {
 	*out = *in
 	out.Conditions = in.Conditions.DeepCopy()
 }
 
+// DeepCopy returns a deep copy of the TargetRef.
 func (in *TargetRef) DeepCopy() *TargetRef {
 	if in == nil {
 		return nil
@@ -40,6 +44,7 @@ func (in *TargetRef) DeepCopy() *TargetRef {
 	return out
 }
 
+// DeepCopyInto copies all fields into the given TargetState.
 func (in *TargetState) DeepCopyInto(out *TargetState) {
 	*out = *in
 	out.AppliedAdditions = in.AppliedAdditions.DeepCopy()
@@ -47,6 +52,7 @@ func (in *TargetState) DeepCopyInto(out *TargetState) {
 	out.RemovedEntries = in.RemovedEntries.DeepCopy()
 }
 
+// DeepCopy returns a deep copy of the TargetState.
 func (in *TargetState) DeepCopy() *TargetState {
 	if in == nil {
 		return nil
@@ -56,6 +62,7 @@ func (in *TargetState) DeepCopy() *TargetState {
 	return out
 }
 
+// DeepCopyInto copies all fields into the given PatchRuleStatus.
 func (in *PatchRuleStatus) DeepCopyInto(out *PatchRuleStatus) {
 	*out = *in
 	if in.Conditions != nil {
@@ -72,6 +79,7 @@ func (in *PatchRuleStatus) DeepCopyInto(out *PatchRuleStatus) {
 	}
 }
 
+// DeepCopy returns a deep copy of the PatchRuleStatus.
 func (in *PatchRuleStatus) DeepCopy() *PatchRuleStatus {
 	if in == nil {
 		return nil

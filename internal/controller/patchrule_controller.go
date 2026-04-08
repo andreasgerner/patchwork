@@ -1,3 +1,4 @@
+// Package controller implements the PatchRule reconciler.
 package controller
 
 import (

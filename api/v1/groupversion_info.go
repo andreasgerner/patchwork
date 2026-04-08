@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
+// GroupVersion is the API group and version for PatchRule resources.
 var (
 	GroupVersion  = schema.GroupVersion{Group: "patchwork.io", Version: "v1"}
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

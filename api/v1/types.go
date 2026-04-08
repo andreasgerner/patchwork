@@ -17,6 +17,7 @@ type NestedObject struct {
 	Data map[string]interface{} `json:"-"`
 }
 
+// MarshalJSON implements json.Marshaler for NestedObject.
 func (n NestedObject) MarshalJSON() ([]byte, error) {
 	if n.Data == nil {
 		return []byte("null"), nil
@@ -24,10 +25,12 @@ func (n NestedObject) MarshalJSON() ([]byte, error) {
 	return json.Marshal(n.Data)
 }
 
+// UnmarshalJSON implements json.Unmarshaler for NestedObject.
 func (n *NestedObject) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &n.Data)
 }
 
+// DeepCopy returns a deep copy of the NestedObject.
 func (n NestedObject) DeepCopy() NestedObject {
 	return NestedObject{Data: cloneMap(n.Data)}
 }
